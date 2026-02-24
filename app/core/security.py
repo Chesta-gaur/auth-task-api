@@ -6,6 +6,8 @@ from fastapi import Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from ..database import SessionLocal
 from ..models import User
+import os
+from dotenv import load_dotenv
 
 pwd_context = CryptContext(
     schemes = ["bcrypt"],
@@ -19,9 +21,11 @@ def verify_password(plain_password : str, hashed_password : str) -> bool:
     return pwd_context.verify(plain_password, hashed_password)
 
 # JWT token creation and verification
-SECRET_KEY = "supersecretkey_change_in_production"
-ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 30
+load_dotenv()
+
+SECRET_KEY = os.getenv("SECRET_KEY")
+ALGORITHM = os.getenv("ALGORITHM")
+ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES"))
 
 def create_access_token(data: dict):
     to_encode = data.copy()
@@ -40,7 +44,7 @@ def decode_access_token(token: str):
         return None
     
 # Protect Task Routes
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
 
 def get_db():
     db = SessionLocal()
@@ -53,6 +57,7 @@ def get_current_user(
     token : str = Depends(oauth2_scheme),
     db : Session = Depends(get_db)
 ):
+
     payload = decode_access_token(token)
 
     if payload is None:

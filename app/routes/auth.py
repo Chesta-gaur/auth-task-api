@@ -6,7 +6,7 @@ from ..core.security import hash_password, verify_password, create_access_token
 from fastapi.security import OAuth2PasswordRequestForm
 from .. import schemas
 
-router = APIRouter()
+router = APIRouter(prefix="/auth", tags=["Auth"])
 
 def get_db():
     db = SessionLocal()
@@ -14,12 +14,6 @@ def get_db():
         yield db
     finally: 
         db.close()
-
-@router.get("/")
-def home():
-    return {
-        "message" : "Auth_Task API is running"
-    }
 
 @router.post("/register", status_code=201)
 def register(user: schemas.UserCreate, db : Session= Depends(get_db)):
